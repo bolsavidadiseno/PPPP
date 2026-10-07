@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mi Primera AR con Three.js</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <!-- Importar Three.js desde un CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { ARButton } from 'three/addons/webxr/ARButton.js';
+
+        // 1. Configurar Escena y Cámara
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+
+        // 2. Configurar el Renderizador (El motor gráfico)
+        // alpha: true es obligatorio para que el fondo sea transparente y se vea la cámara
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        
+        // ¡ESTA LÍNEA ACTIVA LA REALIDAD AUMENTADA!
+        renderer.xr.enabled = true; 
+        document.body.appendChild(renderer.domElement);
+
+        // 3. Crear el botón de "Entrar a AR"
+        document.body.appendChild(ARButton.createButton(renderer));
+
+        // 4. Añadir Iluminación
+        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+        light.position.set(0.5, 1, 0.25);
+        scene.add(light);
+
+        // 5. Crear el objeto 3D (Un cubo verde)
+        // Las medidas en WebXR son en metros. 0.2 = 20 centímetros.
+        const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2); 
+        const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+        const cube = new THREE.Mesh(geometry, material);
+        
+        // Posicionar el cubo 1 metro hacia adelante (eje Z negativo)
+        cube.position.set(0, 0, -1);
+        scene.add(cube);
+
+        // 6. Bucle de Animación
+        renderer.setAnimationLoop(() => {
+            // Hacer que el cubo rote lentamente
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
+            
+            renderer.render(scene, camera);
+        });
+
+        // 7. Ajustar la pantalla si se gira el celular
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
